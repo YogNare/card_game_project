@@ -146,8 +146,8 @@ int start_menu(SDL_Renderer *renderer, SDL_Event *event, bool *running, Rect_Tex
 
     for (int i = 0; i < start_menu_list->len; i++) {
         SDL_SetRenderDrawColor(renderer, 0, 255, 255, 255);
-        SDL_RenderDrawRect(renderer, &start_menu_list->list[i].rect);
-        render_text(renderer, font, start_menu_list->list[i].text, textColor, &start_menu_list->list[i].rect);
+        SDL_RenderDrawRect(renderer, &start_menu_list->list[i]->rect);
+        render_text(renderer, font, start_menu_list->list[i]->text, textColor, &start_menu_list->list[i]->rect);
     }
 
     SDL_RenderPresent(renderer);
@@ -174,8 +174,8 @@ int start_awards(SDL_Renderer *renderer, SDL_Event *event, TTF_Font *font, bool 
 
     for (int i = 0; i < awards_list->len; i++) {
         SDL_SetRenderDrawColor(renderer, 0, 255, 255, 255);
-        SDL_RenderDrawRect(renderer, &awards_list->list[i].rect);
-        render_text(renderer, font, awards_list->list[i].text, textColor, &awards_list->list[i].rect);
+        SDL_RenderDrawRect(renderer, &awards_list->list[i]->rect);
+        render_text(renderer, font, awards_list->list[i]->text, textColor, &awards_list->list[i]->rect);
     }
 
     SDL_RenderPresent(renderer);
@@ -210,6 +210,7 @@ int battle_init(Player **player, Enemy_list **enemy_list, int *battle_start) {
     *battle_start = true;
     return 0;
 }
+
 
 
 
@@ -356,15 +357,22 @@ int main() {
     SDL_Rect awards_new_card_rect = {WINDOW_WIDTH / 20, WINDOW_HEIGHT / 9 * 6, WINDOW_WIDTH / 5, WINDOW_HEIGHT / 20};
     SDL_Rect awards_gold_rect = {WINDOW_WIDTH / 20, WINDOW_HEIGHT / 9 * 6 + WINDOW_HEIGHT / 15, WINDOW_WIDTH / 5, WINDOW_HEIGHT / 20};
 
-    Rect_Text_List *awards_list = (Rect_Text_List *) malloc(sizeof(Rect_Text_List));
-    awards_list->len = 3;
-    awards_list->list = (Rect_Text *) malloc(start_menu_list->len * sizeof(Rect_Text));
-    awards_list->list[0].rect = awards_new_card_rect;
-    awards_list->list[0].text = "Choose card";
-    awards_list->list[1].rect = awards_gold_rect;
-    awards_list->list[1].text = "Gold";
-    awards_list->list[2].rect = continue_rect;
-    awards_list->list[2].text = "Continue";
+    // Rect_Text_List *awards_list = (Rect_Text_List *) malloc(sizeof(Rect_Text_List));
+    // awards_list->len = 3;
+    // awards_list->list = (Rect_Text *) malloc(start_menu_list->len * sizeof(Rect_Text));
+    // awards_list->list[0].rect = awards_new_card_rect;
+    // awards_list->list[0].text = "Choose card";
+    // awards_list->list[1].rect = awards_gold_rect;
+    // awards_list->list[1].text = "Gold";
+    // awards_list->list[2].rect = continue_rect;
+    // awards_list->list[2].text = "Continue";
+
+    Rect_Text_List *awards_list = create_Rect_Text_List(
+        3,
+        create_Rect_Text(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 - 150, 200, 50, "Choose card", continue_handler),
+        create_Rect_Text(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 - 75, 200, 50, "Gold", new_game_handler),
+        create_Rect_Text(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2, 200, 50, "Continue", quite_handler)
+    );
 
     // SDL_Rect continue_rect = {WINDOW_WIDTH / 20, WINDOW_HEIGHT / 9 * 6 + 2 * WINDOW_HEIGHT / 15, WINDOW_WIDTH / 5, WINDOW_HEIGHT / 20};
     
