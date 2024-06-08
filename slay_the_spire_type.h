@@ -1,99 +1,73 @@
 #pragma once
 
+#define WINDOW_WIDTH 1024
+#define WINDOW_HEIGHT 768
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#define START_MENU_STATE 0
+#define MAP_STATE 1
+#define BATTLE_STATE 2
 
+#define CARD_ATTACK_1_COST 1
+#define CARD_ATTACK_1_DAMAGE 6
+#define CARD_ATTACK_2_COST 2
+#define CARD_ATTACK_2_DAMAGE 15
+#define CARD_DEFENSE_COST 1
+#define CARD_DEFENSE_AMOUNT 5
 
-#define WINDOW_HEIGHT 900
-#define WINDOW_WIDTH 1200
-#define WINDOW_BACKGROUND_COLOR 35, 35, 35, 255
-#define START_MENU 0
-#define BATTLE_MOD 1
-#define MAP 2
-#define AWARDS 3
-#define CHOOSE_CARD_MOD 4
-#define ENEMY_TURN 1
-#define PLAYER_TURN 0
-#define COUNT_CARDS 2
+#define ATTACK 0
+#define DEFENSE 1
 
+struct Player; // Forward declaration
+struct Enemy;  // Forward declaration
 
-typedef struct Card_node {
-    SDL_Rect value;
-    int (*func)(void *, void *);
-    char *desc;
-    int energy;
-    struct Card_node *next;
-} Card_node;
+typedef struct Card {
+    int id;
+    char name[20];
+    int cost;
+    int action_type;
+    int value;
+    void (*action)(struct Player *player, struct Enemy *enemy);
+} Card;
 
-
-typedef struct {
-    int len;
-    Card_node *head;
-} Card_list;
-
-
-typedef struct Enemy_node {
-    int hp;
-    int defense;
-    int action;
-    int count_action;
-    int (**actions)();
-    double attack_factor;
-    double defense_factor;
-    char *desc;
-    SDL_Rect value;
-    struct Enemy_node *next;
-} Enemy_node;
-
-
-typedef struct {
-    
-    int len;
-    Enemy_node *head;
-} Enemy_list;
-
+typedef struct CardDeck {
+    Card cards[30];
+    int card_count;
+} CardDeck;
 
 typedef struct Player {
-    
-    int hp;
+    int health;
+    int max_health;
+    int energy;
     int defense;
-    int count_cards;
-    Card_list *reset_pile;
-    Card_list *pile_of_goodness;
-    Card_list *hand;
-    double attack_factor;
-    double defense_factor;
-    SDL_Rect hero_rect;
-    SDL_Rect energy_rect;
-    int cur_energy;
-    int max_energy;
+    CardDeck drawPile;
+    CardDeck discardPile;
+    CardDeck hand;
 } Player;
 
+typedef struct Enemy {
+    int health;
+    int max_health;
+    int defense;
+    char name[20];
+    void (*actions[5])(struct Enemy*, struct Player*);
+    int current_action;
+    int attack_power;
+} Enemy;
 
-typedef struct {
+typedef enum {
+    ENEMY_TYPE_1,
+    ENEMY_TYPE_2,
+    ENEMY_TYPE_3
+} EnemyType;
 
-    SDL_Rect rect;
-    char *text;
-    int (*func)();
-} Rect_Text;
+extern int currentLevel;
 
-
-typedef struct {
-
-    Rect_Text **list;
-    int len;
-} Rect_Text_List;
-
-
-typedef struct {
-
-    int x;
-    int y;
-    int w;
-    int h;
-} Rect_size;
+void player_attack(Player *player, Enemy *enemy, int damage);
+void player_defend(Player *player, int defense);
+void player_take_damage(Player *player, int damage);
+void enemy_take_damage(Enemy *enemy, int damage);
+void init_card_deck(CardDeck *deck);
+void draw_cards(Player *player, int num_cards);
+void play_card(Card *card, Player *player, Enemy *enemy);
+void shuffle_deck(CardDeck *deck);
+Card draw_card(CardDeck *deck);

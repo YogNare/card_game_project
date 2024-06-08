@@ -1,75 +1,68 @@
 #include "slay_the_spire_enemy_func.h"
+#include <stdio.h>
+#include <string.h>
 
+void init_enemy(Enemy *enemy, EnemyType type) {
+    memset(enemy, 0, sizeof(Enemy)); // Инициализация всех полей структуры нулями
 
-Enemy_list *enemy_init_list() {
-    Enemy_list *list = (Enemy_list *)malloc(sizeof(Enemy_list));
-    list->len = 0;
-    list->head = NULL;
-    return list;
+    switch (type) {
+        case ENEMY_TYPE_1:
+            enemy->health = 50;
+            enemy->max_health = 50;
+            enemy->attack_power = 10;
+            enemy->defense = 5;
+            snprintf(enemy->name, sizeof(enemy->name), "Enemy 1");
+            enemy->actions[0] = enemy_attack;
+            enemy->actions[1] = (void (*)(struct Enemy*, struct Player*))enemy_defend;
+            enemy->actions[2] = (void (*)(struct Enemy*, struct Player*))enemy_do_nothing;
+            enemy->current_action = 0;
+            break;
+        case ENEMY_TYPE_2:
+            enemy->health = 70;
+            enemy->max_health = 70;
+            enemy->attack_power = 15;
+            enemy->defense = 10;
+            snprintf(enemy->name, sizeof(enemy->name), "Enemy 2");
+            enemy->actions[0] = berserker_attack;
+            enemy->actions[1] = (void (*)(struct Enemy*, struct Player*))enemy_defend;
+            enemy->actions[2] = (void (*)(struct Enemy*, struct Player*))enemy_do_nothing;
+            enemy->current_action = 0;
+            break;
+        case ENEMY_TYPE_3:
+            enemy->health = 100;
+            enemy->max_health = 100;
+            enemy->attack_power = 20;
+            enemy->defense = 15;
+            snprintf(enemy->name, sizeof(enemy->name), "Enemy 3");
+            enemy->actions[0] = berserker_attack;
+            enemy->actions[1] = (void (*)(struct Enemy*, struct Player*))enemy_defend;
+            enemy->actions[2] = (void (*)(struct Enemy*, struct Player*))enemy_do_nothing;
+            enemy->current_action = 0;
+            break;
+        default:
+            printf("Unknown enemy type\n");
+            break;
+    }
 }
 
-
-void enemy_free_list(Enemy_list *list) {
-    Enemy_node *free_node;
-    while (list->head != NULL) {
-        free_node = list->head;
-        list->head = list->head->next;
-        free(free_node);
-    }
-    free(list);
+void enemy_attack(struct Enemy *enemy, struct Player *player) {
+    player_take_damage(player, enemy->attack_power);
 }
 
-
-Enemy_node *enemy_create_node(SDL_Rect *rect, int hp) {
-    Enemy_node *new_node = (Enemy_node *)malloc(sizeof(Enemy_node));
-    new_node->value = *rect;
-    new_node->next = NULL;
-    new_node->hp = hp;
-    return new_node;
+void enemy_defend(struct Enemy *enemy) {
+    enemy->defense += 5;
 }
 
-
-int enemy_add_node(Enemy_list *list, int hp, int x, int y, int w, int h) {
-    SDL_Rect rect = {x, y, w, h};
-    Enemy_node *new_node = enemy_create_node(&rect, hp);
-
-    if (list->head == NULL) {
-        list->head = new_node;
-    } else {
-        Enemy_node *help_node = list->head;
-        while (help_node->next != NULL) {
-            help_node = help_node->next;
-        }
-        help_node->next = new_node;
-    }
-    list->len++;
-    return 0;
+void enemy_do_nothing(struct Enemy *enemy) {
+    // Enemy does nothing this turn
 }
 
+void berserker_attack(struct Enemy *enemy, struct Player *player) {
+    int damage = enemy->attack_power * 2; // Удвоенная сила атаки
+    player_take_damage(player, damage);
+}
 
-int enemy_delete_by_id(Enemy_list *list, int id) {
-    if (id >= list->len) {
-        return 1;
-    }
-
-    Enemy_node *delete_node = list->head;
-    Enemy_node *current_node = list->head;
-
-    if (id == 0) {
-        list->head = list->head->next;
-        list->len--;
-        free(delete_node);
-        return 0;
-    }
-
-    for (int i = 1; i < id; i++) {
-        current_node = current_node->next;
-    }
-
-    delete_node = current_node->next;
-    current_node->next = delete_node->next;
-    free(delete_node);
-    list->len--;
-
-    return 0;
+void enemy_turn(struct Enemy *enemy, struct Player *player) {
+    enemy->actions[enemy->current_action](enemy, player);
+    enemy->current_action = (enemy->current_action + 1) % 3;
 }
