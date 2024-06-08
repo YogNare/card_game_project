@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 
 #define WINDOW_HEIGHT 900
@@ -15,12 +16,17 @@
 #define BATTLE_MOD 1
 #define MAP 2
 #define AWARDS 3
+#define CHOOSE_CARD_MOD 4
+#define ENEMY_TURN 1
+#define PLAYER_TURN 0
+#define COUNT_CARDS 2
 
 
 typedef struct Card_node {
     SDL_Rect value;
     int (*func)(void *, void *);
     char *desc;
+    int energy;
     struct Card_node *next;
 } Card_node;
 
@@ -36,7 +42,7 @@ typedef struct Enemy_node {
     int defense;
     int action;
     int count_action;
-    int *actions;
+    int (**actions)();
     double attack_factor;
     double defense_factor;
     char *desc;
@@ -79,7 +85,7 @@ typedef struct {
 
 typedef struct {
 
-    Rect_Text *list;
+    Rect_Text **list;
     int len;
 } Rect_Text_List;
 

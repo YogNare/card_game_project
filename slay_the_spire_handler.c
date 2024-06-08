@@ -1,4 +1,14 @@
 #include "slay_the_spire_handler.h"
+#include "slay_the_spire_cards_func.h"
+
+
+bool check_in_box(SDL_Event *event, SDL_Rect *rect) {
+
+    if (rect->x < event->button.x && event->button.x < rect->x + rect->w &&
+        rect->y < event->button.y && event->button.y < rect->y + rect->h)
+        return true;
+    else return false;
+}
 
 
 int keyboard_handler(SDL_Event *event, bool *running) {
@@ -31,7 +41,7 @@ int mouse_move_handler(SDL_Event *event) {
 }
 
 
-int battle_mouse_click_handler(SDL_Event *event, Enemy_list *enemy_list, int *choose_rect, Player *player) {
+int battle_mouse_click_handler(SDL_Event *event, Enemy_list *enemy_list, int *choose_rect, Player *player, int *turn) {
     Card_node *card_help_node;
 
     if (*choose_rect != 0) {
@@ -47,14 +57,15 @@ int battle_mouse_click_handler(SDL_Event *event, Enemy_list *enemy_list, int *ch
             Enemy_node *enemy = enemy_list->head;
 
             for (int i = 0; i < enemy_list->len; i++) {
-                if (enemy->value.x < event->button.x && event->button.x < enemy->value.x + enemy->value.w &&
-                    enemy->value.y < event->button.y && event->button.y < enemy->value.y + enemy->value.h) {
+                if (check_in_box(event, &enemy->value)) {
 
                     card_help_node->func(player, enemy);
+                    card_delete_by_id(player->hand, (*choose_rect) - 1);
+
                     if (enemy->hp <= 0) {
-                        //delete_by_id(rect_list, *choose_rect - 1);
                         enemy_delete_by_id(enemy_list, i);
                         printf("enemy %d - die\n", i);
+                        // printf("%d\n", player->hand->len);
                     }
 
                     card_help_node->value.y += 50;
@@ -72,8 +83,7 @@ int battle_mouse_click_handler(SDL_Event *event, Enemy_list *enemy_list, int *ch
         if (i == 0) card_help_node = player->hand->head;
         else card_help_node = card_help_node->next;
 
-        if (card_help_node->value.x < event->button.x && event->button.x < card_help_node->value.x + card_help_node->value.w &&
-            card_help_node->value.y < event->button.y && event->button.y < card_help_node->value.y + card_help_node->value.h) {
+        if (check_in_box(event, &card_help_node->value)) {
             if (event->button.button == SDL_BUTTON_LEFT && *choose_rect == 0) {
                 *choose_rect = i + 1;
                 card_help_node->value.y -= 50;
@@ -83,6 +93,12 @@ int battle_mouse_click_handler(SDL_Event *event, Enemy_list *enemy_list, int *ch
         }
     }
 
+    if (check_in_box(event, &player->energy_rect)) {
+
+        printf("end player turn\n");
+        *turn = ENEMY_TURN;
+    }
+
     return 0;
 }
 
@@ -90,10 +106,9 @@ int battle_mouse_click_handler(SDL_Event *event, Enemy_list *enemy_list, int *ch
 int start_menu_mouse_click_handler(SDL_Event *event, int *mod, Rect_Text_List *start_menu_list, bool *running) { 
 
     for (int i = 0; i < start_menu_list->len; i ++) {
-        if (start_menu_list->list[i].rect.x < event->button.x && event->button.x < start_menu_list->list[i].rect.x + start_menu_list->list[i].rect.w &&
-        start_menu_list->list[i].rect.y < event->button.y && event->button.y < start_menu_list->list[i].rect.y + start_menu_list->list[i].rect.h) {
+        if (check_in_box(event, &start_menu_list->list[i]->rect)) {
             
-            start_menu_list->list[i].func(mod, running);
+            start_menu_list->list[i]->func(mod, running);
 
             break;
         }
@@ -105,12 +120,21 @@ int start_menu_mouse_click_handler(SDL_Event *event, int *mod, Rect_Text_List *s
 
 int map_mouse_click_handler(SDL_Event *event, int *mod, SDL_Rect *map_rect, bool *running, int *battle_start) {
 
-    if (map_rect->x < event->button.x && event->button.x < map_rect->x + map_rect->w &&
-        map_rect->y < event->button.y && event->button.y < map_rect->y + map_rect->h) {
+    if (event, map_rect) {
         
         *mod = BATTLE_MOD;
         *battle_start = 1;
     }
 
     return 0;
+}
+
+
+int awards_mouse_click_handler(SDL_Event *event, int *mod, Rect_Text_List *awards_list, bool *running) {
+
+    if (check_in_box(event, &awards_list->list[0]->rect)) {
+
+        printf("I'm here\n");
+        *mod = CHOOSE_CARD_MOD;
+    }
 }

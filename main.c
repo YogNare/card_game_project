@@ -3,20 +3,24 @@
 #include "slay_the_spire_enemy_func.h"
 #include "slay_the_spire_handler.h"
 
+
 int continue_handler(int *mod, bool *running) {
     printf("Don't work\n");
     return 0;
 }
+
 
 int quit_handler(int *mod, bool *running) {
     *running = false;
     return 0;
 }
 
+
 int new_game_handler(int *mod, bool *running) {
     *mod = MAP;
     return 0;
 }
+
 
 int count_enter(char *text) {
     int count = 0;
@@ -25,6 +29,7 @@ int count_enter(char *text) {
     }
     return count;
 }
+
 
 void render_text(SDL_Renderer *renderer, TTF_Font *font, const char *const_text, SDL_Color color, SDL_Rect *rect) {
     char *text = (char *)malloc((strlen(const_text) + 1) * sizeof(char));
@@ -72,6 +77,7 @@ void render_text(SDL_Renderer *renderer, TTF_Font *font, const char *const_text,
     free(text);
 }
 
+
 int print_enemy(Enemy_list *enemy_list, SDL_Renderer *renderer, TTF_Font *font) {
     if (enemy_list == NULL) {
         printf("enemy not exist\n");
@@ -93,6 +99,7 @@ int print_enemy(Enemy_list *enemy_list, SDL_Renderer *renderer, TTF_Font *font) 
     return 0;
 }
 
+
 int print_card(Card_list *rect_list, SDL_Renderer *renderer, TTF_Font *font) {
     if (rect_list == NULL) {
         printf("cards not exist\n");
@@ -100,7 +107,7 @@ int print_card(Card_list *rect_list, SDL_Renderer *renderer, TTF_Font *font) {
     }
 
     Card_node *card_help_node = rect_list->head;
-
+    
     for (int i = 0; i < rect_list->len; i++) {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderDrawRect(renderer, &card_help_node->value);
@@ -112,14 +119,19 @@ int print_card(Card_list *rect_list, SDL_Renderer *renderer, TTF_Font *font) {
     return 0;
 }
 
-int battle(SDL_Renderer *renderer, SDL_Event *event, TTF_Font *font, bool *running, Enemy_list *enemy_list, int *choose_rect, Player *player, int *mod) {
+
+int battle(SDL_Renderer *renderer, SDL_Event *event, TTF_Font *font, bool *running, Enemy_list *enemy_list, int *choose_rect, Player *player, int *mod, int *turn) {
+    
+    //printf("%d\n", *turn);
+
     SDL_SetRenderDrawColor(renderer, WINDOW_BACKGROUND_COLOR);
     SDL_RenderClear(renderer);
     SDL_Color textColor = {255, 255, 255, 255};
 
+    // printf("%d\n", player->hand->head->energy);
     print_card(player->hand, renderer, font);
     print_enemy(enemy_list, renderer, font);
-
+    
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderDrawRect(renderer, &player->energy_rect);
 
@@ -127,17 +139,21 @@ int battle(SDL_Renderer *renderer, SDL_Event *event, TTF_Font *font, bool *runni
     sprintf(energy_text, "%d", player->cur_energy);
     render_text(renderer, font, energy_text, textColor, &player->energy_rect);
 
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-    SDL_RenderDrawRect(renderer, &player->hero_rect);
-    render_text(renderer, font, "hero", textColor, &player->hero_rect);
+    // SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+    // SDL_RenderDrawRect(renderer, &player->hero_rect);
+    // render_text(renderer, font, "hero", textColor, &player->hero_rect);
+
+    printf("%d\n", player->hand->len);
+
+    SDL_RenderPresent(renderer);
 
     if (enemy_list->len <= 0) {
         *mod = AWARDS;
     }
 
-    SDL_RenderPresent(renderer);
     return 0;
 }
+
 
 int start_menu(SDL_Renderer *renderer, SDL_Event *event, bool *running, Rect_Text_List *start_menu_list, TTF_Font *font) {
     SDL_SetRenderDrawColor(renderer, WINDOW_BACKGROUND_COLOR);
@@ -145,6 +161,7 @@ int start_menu(SDL_Renderer *renderer, SDL_Event *event, bool *running, Rect_Tex
     SDL_Color textColor = {255, 255, 255, 255};
 
     for (int i = 0; i < start_menu_list->len; i++) {
+
         SDL_SetRenderDrawColor(renderer, 0, 255, 255, 255);
         SDL_RenderDrawRect(renderer, &start_menu_list->list[i]->rect);
         render_text(renderer, font, start_menu_list->list[i]->text, textColor, &start_menu_list->list[i]->rect);
@@ -153,6 +170,7 @@ int start_menu(SDL_Renderer *renderer, SDL_Event *event, bool *running, Rect_Tex
     SDL_RenderPresent(renderer);
     return 0;
 }
+
 
 int start_map(SDL_Renderer *renderer, SDL_Event *event, TTF_Font *font, bool *running, SDL_Rect *map_rect, Player *player) {
     SDL_SetRenderDrawColor(renderer, WINDOW_BACKGROUND_COLOR);
@@ -167,7 +185,9 @@ int start_map(SDL_Renderer *renderer, SDL_Event *event, TTF_Font *font, bool *ru
     return 0;
 }
 
-int start_awards(SDL_Renderer *renderer, SDL_Event *event, TTF_Font *font, bool *running, Rect_Text_List *awards_list, Player *player) {
+
+int start_awards(SDL_Renderer *renderer, SDL_Event *event, TTF_Font *font, bool *running, Rect_Text_List *awards_list, Player *player, Card_list *awards_cards) {
+    
     SDL_SetRenderDrawColor(renderer, WINDOW_BACKGROUND_COLOR);
     SDL_RenderClear(renderer);
     SDL_Color textColor = {255, 255, 255, 255};
@@ -179,8 +199,12 @@ int start_awards(SDL_Renderer *renderer, SDL_Event *event, TTF_Font *font, bool 
     }
 
     SDL_RenderPresent(renderer);
+
+    awards_cards = NULL;
+
     return 0;
 }
+
 
 int battle_init(Player **player, Enemy_list **enemy_list, int *battle_start) {
     (*player)->hand = card_init_list();
@@ -188,7 +212,7 @@ int battle_init(Player **player, Enemy_list **enemy_list, int *battle_start) {
     for (int i = 0; i < 5; i++) {
         card_add_node(
             (*player)->hand,
-            0,
+            rand() % 2,
             WINDOW_WIDTH / 5 + (WINDOW_WIDTH / 10 + 10) * i, 
             WINDOW_HEIGHT / 3 * 2, 
             WINDOW_WIDTH / 10, 
@@ -200,18 +224,28 @@ int battle_init(Player **player, Enemy_list **enemy_list, int *battle_start) {
     for (int i = 0; i < 2; i++) {
         enemy_add_node(
             *enemy_list, 
-            0,
-            WINDOW_WIDTH / 5 + (WINDOW_WIDTH / 10 + 10) * i, 
-            WINDOW_HEIGHT / 3, 
+            100,
+            WINDOW_WIDTH / 1.7 + (WINDOW_WIDTH / 10 + 10) * i, 
+            WINDOW_HEIGHT / 5.5, 
             WINDOW_WIDTH / 10, 
             WINDOW_HEIGHT / 9 * 2);
     }
 
-    *battle_start = true;
+    *battle_start = false;
     return 0;
 }
 
 
+int player_turn(Player **player, Enemy_list **enemy_list, int *battle_start, int *turn) {
+
+    
+}
+
+
+int enemy_turn(Player **player, Enemy_list **enemy_list, int *battle_start) {
+
+    
+}
 
 
 Rect_Text *create_Rect_Text(int x, int y, int w, int h, char *text, int (*handler)(int *, bool *)) {
@@ -241,10 +275,62 @@ Rect_Text_List *create_Rect_Text_List(int len, ...) {
 }
 
 
-//int start_choose_card(SDL_Renderer *renderer, SDL_Event *event, TTF_Font *font, bool *running,)
+Card_list start_choose_card() {
+
+    Card_list *list = card_init_list(list);
+    for (int i = 0; i < 3; i ++) {
+        card_add_node(
+            list, 
+            rand() % COUNT_CARDS, 
+            WINDOW_WIDTH / 5 + (WINDOW_WIDTH / 10 + 10) * i, 
+            WINDOW_HEIGHT / 3 * 2, 
+            WINDOW_WIDTH / 10, 
+            WINDOW_HEIGHT / 9 * 2);
+    }
+
+    return *list;
+}
+
+
+Player *player_init() {
+    Player *player = (Player *) malloc(sizeof(Player));
+    SDL_Rect hero_rect;
+    player->hero_rect = hero_rect;
+    player->hp = 100;
+    SDL_Rect rect = {WINDOW_WIDTH / 18, WINDOW_HEIGHT / 9 * 6.5, WINDOW_WIDTH / 15, WINDOW_WIDTH / 15};
+    player->energy_rect = rect;
+    player->max_energy = 3;
+    player->cur_energy = 3;
+
+    return player;
+}
+
+
+int choose_card(SDL_Renderer *renderer, SDL_Event *event, bool *running, TTF_Font *font, Card_list *awards_cards) {
+
+    //printf("307\n");
+
+    if (awards_cards == NULL) {
+        
+        printf("311\n");
+        *awards_cards = start_choose_card();
+    }
+
+    SDL_SetRenderDrawColor(renderer, WINDOW_BACKGROUND_COLOR);
+    SDL_RenderClear(renderer);
+    SDL_Color textColor = {255, 255, 255, 255};
+
+    if (awards_cards == NULL) printf("~\n");
+
+    print_card(awards_cards, renderer, font);
+
+    SDL_RenderPresent(renderer);
+}
 
 
 int main() {
+
+    srand(time(NULL));
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());
@@ -307,14 +393,16 @@ int main() {
         SDL_Quit();
         return 1;
     }
-
+    
+    bool choose_card_init = false;
     bool running = true;
     SDL_Event event;
     int choose_rect = 0;
     
     Card_list *rect_list = NULL;
     Enemy_list *enemy_list = NULL;
-    Player *player = (Player *) malloc (sizeof(Player));
+    // Player *player = player_init();
+    Player *player = (Player *) malloc(sizeof(Player));
     SDL_Rect hero_rect;
     player->hero_rect = hero_rect;
     player->hp = 100;
@@ -322,62 +410,31 @@ int main() {
     player->energy_rect = rect;
     player->max_energy = 3;
     player->cur_energy = 3;
-
-    SDL_Rect new_game_rect = {WINDOW_WIDTH / 20, WINDOW_HEIGHT / 9 * 6, WINDOW_WIDTH / 5, WINDOW_HEIGHT / 20};
-    SDL_Rect quite_rect = {WINDOW_WIDTH / 20, WINDOW_HEIGHT / 9 * 6 + WINDOW_HEIGHT / 15, WINDOW_WIDTH / 5, WINDOW_HEIGHT / 20};
-    SDL_Rect continue_rect = {WINDOW_WIDTH / 20, WINDOW_HEIGHT / 9 * 6 + 2 * WINDOW_HEIGHT / 15, WINDOW_WIDTH / 5, WINDOW_HEIGHT / 20};
     
-    Rect_size new_game_rect_size = {WINDOW_WIDTH / 20, WINDOW_HEIGHT / 9 * 6, WINDOW_WIDTH / 5, WINDOW_HEIGHT / 20};
-    Rect_size quite_rect_size = {WINDOW_WIDTH / 20, WINDOW_HEIGHT / 9 * 6 + WINDOW_HEIGHT / 15, WINDOW_WIDTH / 5, WINDOW_HEIGHT / 20};
-    Rect_size continue_rect_size = {WINDOW_WIDTH / 20, WINDOW_HEIGHT / 9 * 6 + 2 * WINDOW_HEIGHT / 15, WINDOW_WIDTH / 5, WINDOW_HEIGHT / 20};
-
-    char *start_menu_text;
-
-    // Rect_Text_List *start_menu_list = (Rect_Text_List *) malloc(sizeof(Rect_Text_List));
-    // start_menu_list->len = 3;
-    // start_menu_list->list = (Rect_Text **) malloc(start_menu_list->len * sizeof(Rect_Text *));
-    // create_Rect_Text(start_menu_list->list[0], new_game_rect_size, "New game", new_game_handler);
-    // create_Rect_Text(start_menu_list->list[1], quite_rect_size, "Quite", quite_handler);
-    // create_Rect_Text(start_menu_list->list[2], continue_rect_size, "Continue", continue_handler);
-
 
     Rect_Text_List *start_menu_list = create_Rect_Text_List(
         3,
         create_Rect_Text(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 - 150, 200, 50, "Continue", continue_handler),
         create_Rect_Text(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 - 75, 200, 50, "New Game", new_game_handler),
-        create_Rect_Text(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2, 200, 50, "Quit", quite_handler)
+        create_Rect_Text(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2, 200, 50, "Quit", quit_handler)
     );
-
-
-
-    //printf("%s\n", *start_menu_list->list[0].text);
 
     SDL_Rect map_rect = {100, 100, 100, 100};
 
     SDL_Rect awards_new_card_rect = {WINDOW_WIDTH / 20, WINDOW_HEIGHT / 9 * 6, WINDOW_WIDTH / 5, WINDOW_HEIGHT / 20};
     SDL_Rect awards_gold_rect = {WINDOW_WIDTH / 20, WINDOW_HEIGHT / 9 * 6 + WINDOW_HEIGHT / 15, WINDOW_WIDTH / 5, WINDOW_HEIGHT / 20};
 
-    // Rect_Text_List *awards_list = (Rect_Text_List *) malloc(sizeof(Rect_Text_List));
-    // awards_list->len = 3;
-    // awards_list->list = (Rect_Text *) malloc(start_menu_list->len * sizeof(Rect_Text));
-    // awards_list->list[0].rect = awards_new_card_rect;
-    // awards_list->list[0].text = "Choose card";
-    // awards_list->list[1].rect = awards_gold_rect;
-    // awards_list->list[1].text = "Gold";
-    // awards_list->list[2].rect = continue_rect;
-    // awards_list->list[2].text = "Continue";
-
     Rect_Text_List *awards_list = create_Rect_Text_List(
         3,
         create_Rect_Text(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 - 150, 200, 50, "Choose card", continue_handler),
         create_Rect_Text(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 - 75, 200, 50, "Gold", new_game_handler),
-        create_Rect_Text(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2, 200, 50, "Continue", quite_handler)
+        create_Rect_Text(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2, 200, 50, "Continue", quit_handler)
     );
-
-    // SDL_Rect continue_rect = {WINDOW_WIDTH / 20, WINDOW_HEIGHT / 9 * 6 + 2 * WINDOW_HEIGHT / 15, WINDOW_WIDTH / 5, WINDOW_HEIGHT / 20};
     
     int mod = 0;
     int battle_start = 1;
+    int turn = PLAYER_TURN;
+    Card_list awards_cards;
 
     while (running) {
 
@@ -392,12 +449,18 @@ int main() {
             else if (mod == BATTLE_MOD) {
                 if (event.type == SDL_KEYDOWN) keyboard_handler(&event, &running);
                 else if (event.type == SDL_MOUSEMOTION) mouse_move_handler(&event);
-                else if (event.type == SDL_MOUSEBUTTONDOWN) battle_mouse_click_handler(&event, enemy_list, &choose_rect, player);
+                else if (event.type == SDL_MOUSEBUTTONDOWN) battle_mouse_click_handler(&event, enemy_list, &choose_rect, player, &turn);
             }
             else if (mod == MAP) {
                 if (event.type == SDL_KEYDOWN) keyboard_handler(&event, &running);
                 else if (event.type == SDL_MOUSEMOTION) mouse_move_handler(&event);
                 else if (event.type == SDL_MOUSEBUTTONDOWN) map_mouse_click_handler(&event, &mod, &map_rect, &running, &battle_start);
+            }
+            else if (mod == AWARDS) {
+
+                if (event.type == SDL_KEYDOWN) keyboard_handler(&event, &running);
+                else if (event.type == SDL_MOUSEMOTION) mouse_move_handler(&event);
+                else if (event.type == SDL_MOUSEBUTTONDOWN) awards_mouse_click_handler(&event, &mod, awards_list, &running);
             }
         }
 
@@ -407,9 +470,10 @@ int main() {
         }
 
         if (mod == START_MENU) start_menu(renderer, &event, &running, start_menu_list, font);
-        else if (mod == BATTLE_MOD) battle(renderer, &event, font, &running, enemy_list, &choose_rect, player, &mod);
+        else if (mod == BATTLE_MOD) battle(renderer, &event, font, &running, enemy_list, &choose_rect, player, &mod, &turn);
         else if (mod == MAP) start_map(renderer, &event, font, &running, &map_rect, player);
-        else if (mod == AWARDS) start_awards(renderer, &event, font, &running, awards_list, player);
+        else if (mod == AWARDS) start_awards(renderer, &event, font, &running, awards_list, player, &awards_cards);
+        else if (mod == CHOOSE_CARD_MOD) choose_card(renderer, &event, &running, font, &awards_cards);
     }
 
     enemy_free_list(enemy_list); 
